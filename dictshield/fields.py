@@ -1,12 +1,14 @@
-from base import BaseField, ObjectIdField, DictPunch, InvalidShield, get_document
-from document import Document, EmbeddedDocument
+from dictshield.base import BaseField, ObjectIdField, DictPunch, InvalidShield, get_document
+from dictshield.document import Document, EmbeddedDocument
 from operator import itemgetter
 
 import re
 import pymongo
-import pymongo.dbref
-import pymongo.son
-import pymongo.binary
+
+import bson.son
+import bson.binary
+import bson.dbref
+
 import datetime
 import decimal
 import gridfs
@@ -18,7 +20,7 @@ __all__ = ['StringField', 'IntField', 'FloatField', 'LongField', 'BooleanField',
            'DateTimeField', 'EmbeddedDocumentField', 'ListField', 'DictField',
            'ObjectIdField', 'DecimalField', 'URLField', 'MD5Field', 'SHA1Field',
            'SortedListField', 'EmailField', 'GeoPointField',
-           'DictPunch', 'InvalidShield'] 
+           'DictPunch', 'InvalidShield']
 
 RECURSIVE_REFERENCE_CONSTANT = 'self'
 
@@ -82,7 +84,7 @@ class URLField(StringField):
             try:
                 request = urllib2.Request(value)
                 response = urllib2.urlopen(request)
-            except Exception, e:
+            except Exception as e:
                 message = 'URL does not exist'
                 raise DictPunch(message, self.field_name, value)
 
@@ -93,8 +95,10 @@ class EmailField(StringField):
 
     EMAIL_REGEX = re.compile(
         r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
-        r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"' # quoted-string
-        r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$', re.IGNORECASE # domain
+        # quoted-string
+        r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'
+        # domain
+        r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$', re.IGNORECASE
     )
 
     def validate(self, value):
@@ -134,6 +138,7 @@ class NumberField(BaseField):
                                                               self.max_value),
                             self.field_name, value)
 
+
 class IntField(NumberField):
     """A field that validates input as an Integer
     """
@@ -141,12 +146,13 @@ class IntField(NumberField):
     def __init__(self, *args, **kwargs):
         super(IntField, self).__init__(number_class=int,
                                        number_type='Int',
-                                           *args, **kwargs)
-        
+                                       *args, **kwargs)
+
 
 class LongField(NumberField):
     """A field that validates input as a Long
     """
+
     def __init__(self, *args, **kwargs):
         super(LongField, self).__init__(number_class=long,
                                         number_type='Long',
@@ -156,12 +162,13 @@ class LongField(NumberField):
 class FloatField(BaseField):
     """A field that validates input as a Float
     """
+
     def __init__(self, *args, **kwargs):
         super(FloatField, self).__init__(number_class=float,
                                          number_type='Float',
                                          *args, **kwargs)
 
-        
+
 class DecimalField(BaseField):
     """A fixed-point decimal number field.
     """
@@ -184,7 +191,7 @@ class DecimalField(BaseField):
                 value = str(value)
             try:
                 value = decimal.Decimal(value)
-            except Exception, exc:
+            except Exception as exc:
                 raise DictPunch('Could not convert to decimal',
                                 self.field_name, value)
 
@@ -212,7 +219,7 @@ class MD5Field(BaseField):
             raise DictPunch('MD5 value is not hex',
                             self.field_name, value)
 
-        
+
 class SHA1Field(BaseField):
     """A field that validates input as resembling an SHA1 hash.
     """
@@ -227,7 +234,7 @@ class SHA1Field(BaseField):
         except:
             raise DictPunch('SHA1 value is not hex',
                             self.field_name, value)
-        
+
 
 class BooleanField(BaseField):
     """A boolean field type.
@@ -248,7 +255,6 @@ class DateTimeField(BaseField):
     def validate(self, value):
         if not isinstance(value, datetime.datetime):
             raise DictPunch('Not a datetime', self.field_name, value)
-        
 
 
 class EmbeddedDocumentField(BaseField):
@@ -260,7 +266,7 @@ class EmbeddedDocumentField(BaseField):
         if not isinstance(document_type, basestring):
             if not issubclass(document_type, EmbeddedDocument):
                 raise DictPunch('Invalid embedded document class '
-                                      'provided to an EmbeddedDocumentField')
+                                'provided to an EmbeddedDocumentField')
         self.document_type_obj = document_type
         super(EmbeddedDocumentField, self).__init__(**kwargs)
 
@@ -288,7 +294,7 @@ class EmbeddedDocumentField(BaseField):
         # Using isinstance also works for subclasses of self.document
         if not isinstance(value, self.document_type):
             raise DictPunch('Invalid embedded document instance '
-                                  'provided to an EmbeddedDocumentField')
+                            'provided to an EmbeddedDocumentField')
         self.document_type.validate(value)
 
     def lookup_member(self, member_name):
@@ -323,7 +329,7 @@ class ListField(BaseField):
 
         try:
             [self.field.validate(item) for item in value]
-        except Exception, err:
+        except Exception as err:
             raise DictPunch('Invalid ListField item',
                             self.field_name, str(item))
 
@@ -403,6 +409,6 @@ class GeoPointField(BaseField):
             raise DictPunch('Value must be a two-dimensional point',
                             self.field_name, value)
         if (not isinstance(value[0], (float, int)) and
-            not isinstance(value[1], (float, int))):
+                not isinstance(value[1], (float, int))):
             raise DictPunch('Both values in point must be float or int',
                             self.field_name, value)

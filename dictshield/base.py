@@ -2,7 +2,7 @@
 
 import sys
 import pymongo
-import pymongo.objectid
+import bson.objectid
 
 
 _document_registry = {}
@@ -123,7 +123,7 @@ class ObjectIdField(BaseField):
         if not isinstance(value, pymongo.objectid.ObjectId):
             try:
                 return pymongo.objectid.ObjectId(unicode(value))
-            except Exception, e:
+            except Exception as e:
                 #e.message attribute has been deprecated since Python 2.6
                 raise InvalidShield(unicode(e))
         return value
@@ -288,7 +288,7 @@ class BaseDocument(object):
         for attr_name,attr_value in values.items():
             try:
                 setattr(self, attr_name, attr_value)
-            except AttributeError, a:
+            except AttributeError as a:
                 pass
 
 
@@ -305,7 +305,7 @@ class BaseDocument(object):
             if value is not None:
                 try:
                     field._validate(value)
-                except (ValueError, AttributeError, AssertionError), e:
+                except (ValueError, AttributeError, AssertionError) as e:
                     raise DictPunch('Invalid value for field of type "%s": %s'
                                           % (field.__class__.__name__, value))
             elif field.required:

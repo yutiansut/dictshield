@@ -1,0 +1,9 @@
+README.md
+dictshield/__init__.py
+dictshield/base.py
+dictshield/document.py
+dictshield/fields.py
+dictshield.egg-info/PKG-INFO
+dictshield.egg-info/SOURCES.txt
+dictshield.egg-info/dependency_links.txt
+dictshield.egg-info/top_level.txt

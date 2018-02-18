@@ -1,4 +1,4 @@
-from base import (BaseDocument, DictPunch, DocumentMetaclass, TopLevelDocumentMetaclass)
+from dictshield.base import (BaseDocument, DictPunch, DocumentMetaclass, TopLevelDocumentMetaclass)
 
 __all__ = ['Document', 'EmbeddedDocument', 'DictPunch']
 
@@ -165,8 +165,8 @@ class Document(BaseDocument):
                 if isinstance(datum, (str, unicode)) and len(datum.strip()) == 0:
                     continue
                 try:
-                    v.validate(datum)
-                except DictPunch, e:
+                    v.validate(datum)   
+                except DictPunch as e:
                     handle_exception(e)
 
         if validate_all:
